@@ -18,4 +18,5 @@ public interface HousePricesService {
     ResponseEntity<ServiceResponse> insertHousePricesFromKaggleDataset(MultipartFile file) throws GenericException;
     ResponseEntity<ServiceResponse> insertHousePricesFromKDFilePath(String filePath) throws GenericException;
     Page<HousePrices> getHousePricesList(HouseSearchCriteria criteria, Pageable pageable) throws GenericException;
+    Boolean deleteAllHousePricesData() throws GenericException;
 }

@@ -53,9 +53,16 @@ public class HousePricesController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
     @GetMapping(value = "/get-all-by-multi-threading", produces = "application/json")
-    public CompletableFuture<ResponseEntity> getAllHousePricesDataAsync(@RequestBody String filePath) throws GenericException {
-//        housePricesService.saveHousePricesDataCompletableFuture(filePath);
+    public CompletableFuture<ResponseEntity> getAllHousePricesDataAsync() throws GenericException {
         return housePricesService.findAllHousePricesDataAsync().thenApply(ResponseEntity::ok);
+    }
+    @GetMapping(value = "/get-all-by-multi-threading-join", produces = "application/json")
+    public  ResponseEntity getAllHousePricesDataAsyncJoin() throws GenericException{
+        CompletableFuture<Iterable<HousePrices>> hp1 = housePricesService.findAllHousePricesDataAsync();
+        CompletableFuture<Iterable<HousePrices>> hp2 = housePricesService.findAllHousePricesDataAsync();
+        CompletableFuture<Iterable<HousePrices>> hp3 = housePricesService.findAllHousePricesDataAsync();
+        CompletableFuture.allOf(hp1,hp2,hp3).join();
+        return  ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @GetMapping("/search")
@@ -77,6 +84,12 @@ public class HousePricesController {
     @DeleteMapping("/es-data")
     public ServiceResponse deleteAllHousePricesEsData() throws GenericException {
         housePricesESService.deleteAll();
+        return  new ServiceResponse(null, true);
+    }
+
+    @DeleteMapping("/hp-pg-data")
+    public ServiceResponse deleteAllHousePricesData() throws GenericException {
+        housePricesService.deleteAllHousePricesData();
         return  new ServiceResponse(null, true);
     }
 }

@@ -84,22 +84,34 @@ public class HousePricesServiceImpl implements HousePricesService {
     @Async
     @Override
     public CompletableFuture<Iterable<HousePrices>> saveHousePricesDataAsync(String file) throws GenericException{
-        try (InputStream inputStream = Files.newInputStream(Paths.get(file))) {
+        try {
             long start = System.currentTimeMillis();
-            List<HousePricesCSVReadingDto> housePricesCSVReadingDtoList = CSVHelper.csvToHousePrices(inputStream);
-            List<HousePrices> housePricesList = getCSVToModelList(housePricesCSVReadingDtoList);
+            List<HousePrices> housePricesList = parseFromCsv(file);
 
+            logger.info("Saving list of house prices of size: {}, thread: {}", housePricesList.size(), ""+Thread.currentThread().getName());
+            Thread.sleep(500);
             Iterable<HousePrices> housePrices = housePricesRepository.saveAll(housePricesList);
 
-            //save a copy of it's into elasticsearch
-            saveHousePriceTextualDataIntoES(housePrices);
+            /*//save a copy of it's into elasticsearch
+            saveHousePriceTextualDataIntoES(housePrices);*/
 
             long end = System.currentTimeMillis();
             logger.info("Total time: "+(end-start));
             return CompletableFuture.completedFuture(housePrices);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Error occurred while saving house prices data from csv file, message: {}", e.getMessage());
+            throw new RuntimeException("fail to store csv data: " + e.getMessage());
+        }
+    }
+    private List<HousePrices> parseFromCsv(String file) throws GenericException{
+        try (InputStream inputStream = Files.newInputStream(Paths.get(file))) {
+            List<HousePricesCSVReadingDto> housePricesCSVReadingDtoList = CSVHelper.csvToHousePrices(inputStream);
+            List<HousePrices> housePricesList = getCSVToModelList(housePricesCSVReadingDtoList);
+            return housePricesList;
+
+        } catch (IOException e) {
+            logger.error("Error occurred while parsing house prices data from csv file, message: {}", e.getMessage());
             throw new RuntimeException("fail to store csv data: " + e.getMessage());
         }
     }
@@ -109,9 +121,7 @@ public class HousePricesServiceImpl implements HousePricesService {
     public CompletableFuture<Iterable<HousePrices>> findAllHousePricesDataAsync() throws GenericException{
         try {
             logger.info("Get list of house prices data by {}", Thread.currentThread().getName());
-
             Iterable<HousePrices> housePricesList = housePricesRepository.findAll();
-
             return CompletableFuture.completedFuture(housePricesList);
 
         } catch (Exception e) {
@@ -227,6 +237,11 @@ public class HousePricesServiceImpl implements HousePricesService {
 
         return userPage;
     }
+    @Override
+    public Boolean deleteAllHousePricesData() throws GenericException{
+        housePricesRepository.deleteAll();
+        return true;
+    }
     private HousePrices getModel(HousePricesCSVReadingDto csvRecord) throws GenericException{
         HousePrices housePrices = new HousePrices();
 
@@ -284,7 +299,7 @@ public class HousePricesServiceImpl implements HousePricesService {
         housePrices.setZipcode(getOldIdOrSaveLookupZipcode(zipCode));
 
         housePrices.setYNumberOfPersonsWant(Integer.parseInt(csvRecord.getYNumberOfPersonsWant()));
-        logger.info("House Prices: "+housePrices.toString());
+//        logger.info("House Prices: "+housePrices.toString());
 
         return housePrices;
     }
