@@ -21,8 +21,8 @@ Run: mvn spring-boot: run
 #Download and run elasticsearch
 https://www.elastic.co/downloads/past-releases/elasticsearch-7-13-1
 
-Go to the bin folder, for windows execute elasticsearch.bat
-the node start like 127.0.0.1:9200
+Go to the bin folder, for windows, execute elasticsearch.bat
+The node will be started, and the node details will be shown as host:port, for example 127.0.0.1:9200
 
 To get the node info:
 Hit the url: http://127.0.0.1:9200/
@@ -58,9 +58,9 @@ Caused by: org.postgresql.util.PSQLException:
 The authentication type 10 is not supported. Check that you have configured the pg_hba.conf file to include the client's IP address or subnet, and that it is using an authentication scheme supported by the driver.
 
 Probable Solution: \
-Open postgresql.conf file location in windows: C:\Program Files\PostgreSQL\15\data
+Open pg_hba.conf file location in windows: C:\Program Files\PostgreSQL\15\data
 
-Update: \
+Update IPv4 local connections: \
 host    all             all             127.0.0.1/32            scram-sha-256 \
 to \
 host    all             all             127.0.0.1/32            trust

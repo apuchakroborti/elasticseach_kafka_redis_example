@@ -30,11 +30,9 @@ public class CSVHelper {
 
         return true;
     }
-    private static void print(String title, String val){
-        System.out.println(title+": "+val);
-    }
+
     public static List<HousePricesCSVReadingDto> csvToHousePrices(InputStream is) {
-        int count=100;
+        int count=4000;
         try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
              
              CSVParser csvParser = new CSVParser(fileReader,
