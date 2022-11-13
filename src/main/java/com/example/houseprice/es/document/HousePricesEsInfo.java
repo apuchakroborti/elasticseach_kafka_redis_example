@@ -5,6 +5,7 @@ import com.example.houseprice.utils.Utils;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -18,6 +19,7 @@ import java.time.LocalDate;
 @Document(indexName = "house_prices_textual_info")
 @Setting(settingPath = "static/es-settings.json")
 @NoArgsConstructor
+@ToString
 public class HousePricesEsInfo {
 
     @Id

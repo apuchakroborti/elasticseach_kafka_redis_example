@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.kafka.core.KafkaTemplate;
+
 
 @Service
 @Transactional
@@ -55,6 +58,8 @@ public class HousePricesServiceImpl implements HousePricesService {
     private final LookupCalcellationTypeTypeRepository  lookupCalcellationTypeTypeRepository;
     private final LookupRoomTypeRepository lookupRoomTypeRepository;
 
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
     @Autowired
     public HousePricesServiceImpl(
             HousePricesRepository housePricesRepository,
@@ -66,7 +71,8 @@ public class HousePricesServiceImpl implements HousePricesService {
             HousePricesESService housePricesESService,
             LookupBedTypeRepository lookupBedTypeRepository,
             LookupCalcellationTypeTypeRepository  lookupCalcellationTypeTypeRepository,
-            LookupRoomTypeRepository lookupRoomTypeRepository
+            LookupRoomTypeRepository lookupRoomTypeRepository,
+            KafkaTemplate<String, String> kafkaTemplate
 
     ){
         this.housePricesRepository = housePricesRepository;
@@ -79,6 +85,27 @@ public class HousePricesServiceImpl implements HousePricesService {
         this.lookupBedTypeRepository = lookupBedTypeRepository;
         this.lookupCalcellationTypeTypeRepository = lookupCalcellationTypeTypeRepository;
         this.lookupRoomTypeRepository = lookupRoomTypeRepository;
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    @KafkaListener(topics = "CodeDecodeTopic", groupId = "codedecode-group")
+    public void listenToCodeDecodeKafkaTopic(String messageReceived) {
+        try {
+            System.out.println("Message received is " + messageReceived);
+            Optional<HousePrices> prices = housePricesRepository.findById(Long.valueOf(messageReceived.substring(15)));
+            if(prices.isPresent()){
+                System.out.println("House price is present id: " + prices.get().getId());
+                System.out.println("House price is present: " + prices.get().toString());
+                HousePricesEsInfo housePricesEsInfo = new HousePricesEsInfo(prices.get());
+                System.out.println("housePricesEsInfo is present: " + housePricesEsInfo.toString());
+                housePricesESService.save(housePricesEsInfo);
+            }else{
+                System.out.println("Message received is but not found with this id" + Long.valueOf(messageReceived.substring(15)));
+            }
+        }catch (Exception e){
+            logger.error("Error occurred while saving data into es, message: {}", e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Async
@@ -92,8 +119,8 @@ public class HousePricesServiceImpl implements HousePricesService {
             Thread.sleep(500);
             Iterable<HousePrices> housePrices = housePricesRepository.saveAll(housePricesList);
 
-            /*//save a copy of it's into elasticsearch
-            saveHousePriceTextualDataIntoES(housePrices);*/
+            //save a copy of it's into elasticsearch
+            saveHousePriceTextualDataIntoES(housePrices);
 
             long end = System.currentTimeMillis();
             logger.info("Total time: "+(end-start));
@@ -160,7 +187,9 @@ public class HousePricesServiceImpl implements HousePricesService {
         while (iterator.hasNext()){
             HousePrices prices = (HousePrices) iterator.next();
             logger.info("Saving data into es id:{}", prices.getId());
-            housePricesESService.save(new HousePricesEsInfo(prices));
+//            housePricesESService.save(new HousePricesEsInfo(prices));
+            //TODO send message to store data in the elasticsearch server
+            kafkaTemplate.send("CodeDecodeTopic", "HousePricesId: "+prices.getId());
         }
     }
     public void saveFromFilePath(String file) throws GenericException{
