@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Transactional
@@ -77,6 +79,45 @@ public class HousePricesServiceImpl implements HousePricesService {
         this.lookupBedTypeRepository = lookupBedTypeRepository;
         this.lookupCalcellationTypeTypeRepository = lookupCalcellationTypeTypeRepository;
         this.lookupRoomTypeRepository = lookupRoomTypeRepository;
+    }
+
+    @Async
+    @Override
+    public CompletableFuture<Iterable<HousePrices>> saveHousePricesDataAsync(String file) throws GenericException{
+        try (InputStream inputStream = Files.newInputStream(Paths.get(file))) {
+            long start = System.currentTimeMillis();
+            List<HousePricesCSVReadingDto> housePricesCSVReadingDtoList = CSVHelper.csvToHousePrices(inputStream);
+            List<HousePrices> housePricesList = getCSVToModelList(housePricesCSVReadingDtoList);
+
+            Iterable<HousePrices> housePrices = housePricesRepository.saveAll(housePricesList);
+
+            //save a copy of it's into elasticsearch
+            saveHousePriceTextualDataIntoES(housePrices);
+
+            long end = System.currentTimeMillis();
+            logger.info("Total time: "+(end-start));
+            return CompletableFuture.completedFuture(housePrices);
+
+        } catch (IOException e) {
+            logger.error("Error occurred while saving house prices data from csv file, message: {}", e.getMessage());
+            throw new RuntimeException("fail to store csv data: " + e.getMessage());
+        }
+    }
+
+    @Async
+    @Override
+    public CompletableFuture<Iterable<HousePrices>> findAllHousePricesDataAsync() throws GenericException{
+        try {
+            logger.info("Get list of house prices data by {}", Thread.currentThread().getName());
+
+            Iterable<HousePrices> housePricesList = housePricesRepository.findAll();
+
+            return CompletableFuture.completedFuture(housePricesList);
+
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching house prices data from postgres database, message: {}", e.getMessage());
+            throw new RuntimeException("fail to store csv data: " + e.getMessage());
+        }
     }
 
     List<HousePrices> getCSVToModelList(List<HousePricesCSVReadingDto> housePricesCSVReadingDtoList) throws GenericException{

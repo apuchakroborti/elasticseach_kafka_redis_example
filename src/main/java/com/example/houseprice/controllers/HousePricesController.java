@@ -15,9 +15,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.concurrent.CompletableFuture;
 
 
 @RestController
@@ -43,6 +46,16 @@ public class HousePricesController {
     public ResponseEntity<ServiceResponse> fromFilePathAndSaveHousePricesData(@RequestBody String filePath) throws GenericException {
         return housePricesService.insertHousePricesFromKDFilePath(filePath);
 
+    }
+    @PostMapping("/save-by-multi-threading")
+    public ResponseEntity<ServiceResponse> fromFilePathAndSaveHousePricesDataAsync(@RequestBody String filePath) throws GenericException {
+        housePricesService.saveHousePricesDataAsync(filePath);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+    @GetMapping(value = "/get-all-by-multi-threading", produces = "application/json")
+    public CompletableFuture<ResponseEntity> getAllHousePricesDataAsync(@RequestBody String filePath) throws GenericException {
+//        housePricesService.saveHousePricesDataCompletableFuture(filePath);
+        return housePricesService.findAllHousePricesDataAsync().thenApply(ResponseEntity::ok);
     }
 
     @GetMapping("/search")

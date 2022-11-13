@@ -34,7 +34,7 @@ public class CSVHelper {
         System.out.println(title+": "+val);
     }
     public static List<HousePricesCSVReadingDto> csvToHousePrices(InputStream is) {
-        int count=100;
+        int count=10;
         try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
              
              CSVParser csvParser = new CSVParser(fileReader,
