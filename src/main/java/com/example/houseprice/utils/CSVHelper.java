@@ -32,7 +32,7 @@ public class CSVHelper {
     }
 
     public static List<HousePricesCSVReadingDto> csvToHousePrices(InputStream is) {
-        int count=4000;
+        int count=400;
         try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
              
              CSVParser csvParser = new CSVParser(fileReader,

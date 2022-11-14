@@ -42,11 +42,11 @@ public class HousePricesEsInfo {
     @Field(name = "bed_type", type = FieldType.Text)
     private String bedType;
 
-    @Field(name = "bedrooms", type = FieldType.Integer)
-    private Integer bedrooms;
+    @Field(name = "bedrooms", type = FieldType.Double)
+    private Double bedrooms;
 
-    @Field(name = "beds", type = FieldType.Integer)
-    private Integer beds;
+    @Field(name = "beds", type = FieldType.Double)
+    private Double beds;
 
     @Field(name = "cancellation_policy", type = FieldType.Text)
     private String cancellationPolicy;
@@ -94,8 +94,8 @@ public class HousePricesEsInfo {
     @Field(name = "property_type", type = FieldType.Text)
     private String propertyType;
 
-    @Field(name = "review_scores_rating", type = FieldType.Integer)
-    private Integer reviewScoresRating;
+    @Field(name = "review_scores_rating", type = FieldType.Double)
+    private Double reviewScoresRating;
 
     @Field(name = "room_type", type = FieldType.Text)
     private String roomType;
@@ -107,8 +107,8 @@ public class HousePricesEsInfo {
     @Field(name = "zipcode", type = FieldType.Text)
     private String lookupZipcode;
 
-    @Field(name = "y_number_of_persons_want", type = FieldType.Integer)
-    private Integer yNumberOfPersonsWant;
+    @Field(name = "y_number_of_persons_want", type = FieldType.Double)
+    private Double yNumberOfPersonsWant;
 
     public HousePricesEsInfo(HousePrices housePrices){
         Utils.copyProperty(housePrices, this);
