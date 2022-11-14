@@ -5,11 +5,14 @@ import com.example.houseprice.es.document.HousePricesEsInfo;
 import com.example.houseprice.es.enums.EsSearchQueryType;
 import com.example.houseprice.es.repository.HousePricesEsRepository;
 import com.example.houseprice.es.service.HousePricesESService;
+import com.example.houseprice.services.impls.HousePricesServiceImpl;
 import com.example.houseprice.utils.Utils;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -29,6 +32,9 @@ import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 
 @Service
 public class HousePricesESServiceImpls implements HousePricesESService {
+
+    Logger logger = LoggerFactory.getLogger(HousePricesESServiceImpls.class);
+
     private final HousePricesEsRepository housePricesEsRepository;
 
 
@@ -47,13 +53,24 @@ public class HousePricesESServiceImpls implements HousePricesESService {
     }
 
     @Override
+    public void saveAll(List<HousePricesEsInfo> housePricesEsInfo){
+        try {
+            housePricesEsRepository.saveAll(housePricesEsInfo);
+            logger.info("Saving data into completed, size: {}", housePricesEsInfo.size());
+        }catch (Exception e){
+            logger.error("Error occurred while saving data into es, message: {}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public HousePricesEsInfo findById(final Long id){
         return housePricesEsRepository.findById(id).orElse(null);
     }
 
     @Override
     public SearchHits<HousePricesEsInfo> advSearchData(HouseSearchCriteria searchCriteria, Pageable pageable){
-        if(searchCriteria.getEsSearchQueryType().equals(EsSearchQueryType.NativeQuery)){
+        if(searchCriteria.getEsSearchQueryType()!=null && searchCriteria.getEsSearchQueryType().equals(EsSearchQueryType.NativeQuery)){
             //TODO need to add more search criteria
 
             BoolQueryBuilder queryBuilder = boolQuery();
@@ -78,7 +95,7 @@ public class HousePricesESServiceImpls implements HousePricesESService {
             searchQuery.setPageable(pageable);
 
             return elasticsearchTemplate.search(searchQuery, HousePricesEsInfo.class);
-        }else if(searchCriteria.getEsSearchQueryType().equals(EsSearchQueryType.StringQuery)){
+        }else if(searchCriteria.getEsSearchQueryType()!=null && searchCriteria.getEsSearchQueryType().equals(EsSearchQueryType.StringQuery)){
             //TODO need to implement
             return null;
         }

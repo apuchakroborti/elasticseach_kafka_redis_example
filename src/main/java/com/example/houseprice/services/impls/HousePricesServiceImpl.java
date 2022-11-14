@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.kafka.core.KafkaTemplate;
+
 
 @Service
 @Transactional
@@ -55,6 +58,8 @@ public class HousePricesServiceImpl implements HousePricesService {
     private final LookupCalcellationTypeTypeRepository  lookupCalcellationTypeTypeRepository;
     private final LookupRoomTypeRepository lookupRoomTypeRepository;
 
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
     @Autowired
     public HousePricesServiceImpl(
             HousePricesRepository housePricesRepository,
@@ -66,7 +71,8 @@ public class HousePricesServiceImpl implements HousePricesService {
             HousePricesESService housePricesESService,
             LookupBedTypeRepository lookupBedTypeRepository,
             LookupCalcellationTypeTypeRepository  lookupCalcellationTypeTypeRepository,
-            LookupRoomTypeRepository lookupRoomTypeRepository
+            LookupRoomTypeRepository lookupRoomTypeRepository,
+            KafkaTemplate<String, String> kafkaTemplate
 
     ){
         this.housePricesRepository = housePricesRepository;
@@ -79,6 +85,27 @@ public class HousePricesServiceImpl implements HousePricesService {
         this.lookupBedTypeRepository = lookupBedTypeRepository;
         this.lookupCalcellationTypeTypeRepository = lookupCalcellationTypeTypeRepository;
         this.lookupRoomTypeRepository = lookupRoomTypeRepository;
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    @KafkaListener(topics = "CodeDecodeTopic", groupId = "codedecode-group")
+    public void listenToCodeDecodeKafkaTopic(String messageReceived) {
+        try {
+            System.out.println("Message received is " + messageReceived);
+            Optional<HousePrices> prices = housePricesRepository.findById(Long.valueOf(messageReceived.substring(15)));
+            if(prices.isPresent()){
+                System.out.println("House price is present id: " + prices.get().getId());
+                System.out.println("House price is present: " + prices.get().toString());
+                HousePricesEsInfo housePricesEsInfo = new HousePricesEsInfo(prices.get());
+                System.out.println("housePricesEsInfo is present: " + housePricesEsInfo.toString());
+                housePricesESService.save(housePricesEsInfo);
+            }else{
+                System.out.println("Message received is but not found with this id" + Long.valueOf(messageReceived.substring(15)));
+            }
+        }catch (Exception e){
+            logger.error("Error occurred while saving data into es, message: {}", e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Async
@@ -92,8 +119,10 @@ public class HousePricesServiceImpl implements HousePricesService {
             Thread.sleep(500);
             Iterable<HousePrices> housePrices = housePricesRepository.saveAll(housePricesList);
 
-            /*//save a copy of it's into elasticsearch
-            saveHousePriceTextualDataIntoES(housePrices);*/
+            //save a copy of it's into elasticsearch
+//            saveHousePriceTextualDataIntoES(housePrices);
+            //Saving data into es through kafka
+            saveHousePriceDataIntoESThroughKafka(housePrices);
 
             long end = System.currentTimeMillis();
             logger.info("Total time: "+(end-start));
@@ -101,6 +130,7 @@ public class HousePricesServiceImpl implements HousePricesService {
 
         } catch (Exception e) {
             logger.error("Error occurred while saving house prices data from csv file, message: {}", e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("fail to store csv data: " + e.getMessage());
         }
     }
@@ -152,16 +182,36 @@ public class HousePricesServiceImpl implements HousePricesService {
             throw new RuntimeException("fail to store csv data: " + e.getMessage());
         }
     }
-    public void saveHousePriceTextualDataIntoES(Iterable<HousePrices> housePrices){
-        //TODO this temp table will be used while syncing data through kafka from pg to es
-        List<PgToESTempTable>  pgToESTempTables = new ArrayList<>();
+    public void saveHousePriceTextualDataIntoES(Iterable<HousePrices> housePrices) {
+        try {
+            List<HousePricesEsInfo> housePricesEsInfos = new ArrayList<>();
 
-        Iterator iterator = housePrices.iterator();
-        while (iterator.hasNext()){
-            HousePrices prices = (HousePrices) iterator.next();
-            logger.info("Saving data into es id:{}", prices.getId());
-            housePricesESService.save(new HousePricesEsInfo(prices));
+            Iterator iterator = housePrices.iterator();
+            while (iterator.hasNext()) {
+                HousePrices prices = (HousePrices) iterator.next();
+                logger.info("Saving data into es id:{}", prices.getId());
+                housePricesEsInfos.add(new HousePricesEsInfo(prices));
+            }
+            housePricesESService.saveAll(housePricesEsInfos);
+        }catch (Exception e){
+            logger.error("Error occurred while saving house prices data into es, message: {}", e.getMessage());
+            e.printStackTrace();
         }
+    }
+    public void saveHousePriceDataIntoESThroughKafka(Iterable<HousePrices> housePrices) {
+            try {
+                Iterator iterator = housePrices.iterator();
+                while (iterator.hasNext()) {
+                    HousePrices prices = (HousePrices) iterator.next();
+                    logger.info("Sending message into kafka, id:{}", prices.getId());
+
+                    //send message to store data in the elasticsearch server
+                    kafkaTemplate.send("CodeDecodeTopic", "HousePricesId: " + prices.getId());
+                }
+            } catch (Exception e) {
+                logger.error("Error occurred while saving house prices data into es, message: {}", e.getMessage());
+                e.printStackTrace();
+            }
     }
     public void saveFromFilePath(String file) throws GenericException{
         try (InputStream inputStream = Files.newInputStream(Paths.get(file))) {
@@ -173,6 +223,7 @@ public class HousePricesServiceImpl implements HousePricesService {
             saveHousePriceTextualDataIntoES(housePrices);
         } catch (IOException e) {
             logger.error("Error occurred while saving house prices data from csv file, message: {}", e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("fail to store csv data: " + e.getMessage());
         }
     }
@@ -255,8 +306,8 @@ public class HousePricesServiceImpl implements HousePricesService {
 
         housePrices.setBedType(getOldIdOrSaveLookupBedType(csvRecord.getBedType()));
 
-        housePrices.setBedrooms(StringUtils.isEmpty(csvRecord.getBedrooms())?null:Integer.parseInt(csvRecord.getBedrooms()));
-        housePrices.setBeds(StringUtils.isEmpty(csvRecord.getBeds())?null: Integer.parseInt(csvRecord.getBeds()));
+        housePrices.setBedrooms(StringUtils.isEmpty(csvRecord.getBedrooms())?null:Double.parseDouble(csvRecord.getBedrooms()));
+        housePrices.setBeds(StringUtils.isEmpty(csvRecord.getBeds())?null: Double.parseDouble(csvRecord.getBeds()));
 
         housePrices.setCancellationPolicy(getOldIdOrSaveLookupCancellationType(csvRecord.getCancellationPolicy()));
 
@@ -289,7 +340,7 @@ public class HousePricesServiceImpl implements HousePricesService {
         String propertyType = csvRecord.getPropertyType();
         housePrices.setPropertyType(getOldIdOrSaveLookupPropertyType(propertyType));
 
-        housePrices.setReviewScoresRating(StringUtils.isEmpty(csvRecord.getReviewScoresRating())?null : Integer.parseInt(csvRecord.getReviewScoresRating()));
+        housePrices.setReviewScoresRating(StringUtils.isEmpty(csvRecord.getReviewScoresRating())?null : Double.parseDouble(csvRecord.getReviewScoresRating()));
 
         housePrices.setRoomType(getOldIdOrSaveLookupRoomType(csvRecord.getRoomType()));
 
@@ -298,14 +349,16 @@ public class HousePricesServiceImpl implements HousePricesService {
         String zipCode = csvRecord.getLookupZipcode();
         housePrices.setZipcode(getOldIdOrSaveLookupZipcode(zipCode));
 
-        housePrices.setYNumberOfPersonsWant(Integer.parseInt(csvRecord.getYNumberOfPersonsWant()));
+        housePrices.setYNumberOfPersonsWant(Double.parseDouble(csvRecord.getYNumberOfPersonsWant()));
 //        logger.info("House Prices: "+housePrices.toString());
 
         return housePrices;
     }
     LocalDate getLocalDateFromFormat(String date){
+        if(date==null || date.length()<1)return null;
+
         String str[] = date.split("/");
-        return LocalDate.of(Integer.parseInt(str[2]), Integer.parseInt(str[0]), Integer.parseInt(str[1]));
+        return str.length==3?LocalDate.of(Integer.parseInt(str[2]), Integer.parseInt(str[0]), Integer.parseInt(str[1])) : null;
     }
 
     public CityCode getOldIdOrSaveLookupCityCode(String code) throws GenericException {
