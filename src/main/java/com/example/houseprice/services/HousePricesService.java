@@ -9,8 +9,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface HousePricesService {
+    CompletableFuture<Iterable<HousePrices>> saveHousePricesDataAsync(String file) throws GenericException;
+    CompletableFuture<Iterable<HousePrices>> findAllHousePricesDataAsync() throws GenericException;
+
     ResponseEntity<ServiceResponse> insertHousePricesFromKaggleDataset(MultipartFile file) throws GenericException;
     ResponseEntity<ServiceResponse> insertHousePricesFromKDFilePath(String filePath) throws GenericException;
     Page<HousePrices> getHousePricesList(HouseSearchCriteria criteria, Pageable pageable) throws GenericException;
+    Boolean deleteAllHousePricesData() throws GenericException;
 }

@@ -15,9 +15,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.concurrent.CompletableFuture;
 
 
 @RestController
@@ -44,6 +47,23 @@ public class HousePricesController {
         return housePricesService.insertHousePricesFromKDFilePath(filePath);
 
     }
+    @PostMapping("/save-by-multi-threading")
+    public ResponseEntity<ServiceResponse> fromFilePathAndSaveHousePricesDataAsync(@RequestBody String filePath) throws GenericException {
+        housePricesService.saveHousePricesDataAsync(filePath);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+    @GetMapping(value = "/get-all-by-multi-threading", produces = "application/json")
+    public CompletableFuture<ResponseEntity> getAllHousePricesDataAsync() throws GenericException {
+        return housePricesService.findAllHousePricesDataAsync().thenApply(ResponseEntity::ok);
+    }
+    @GetMapping(value = "/get-all-by-multi-threading-join", produces = "application/json")
+    public  ResponseEntity getAllHousePricesDataAsyncJoin() throws GenericException{
+        CompletableFuture<Iterable<HousePrices>> hp1 = housePricesService.findAllHousePricesDataAsync();
+        CompletableFuture<Iterable<HousePrices>> hp2 = housePricesService.findAllHousePricesDataAsync();
+        CompletableFuture<Iterable<HousePrices>> hp3 = housePricesService.findAllHousePricesDataAsync();
+        CompletableFuture.allOf(hp1,hp2,hp3).join();
+        return  ResponseEntity.status(HttpStatus.OK).build();
+    }
 
     @GetMapping("/search")
     public ServiceResponse<Page<HousePricesDto>> searchHouse(HouseSearchCriteria criteria, @PageableDefault(value = 10) Pageable pageable) throws GenericException {
@@ -64,6 +84,12 @@ public class HousePricesController {
     @DeleteMapping("/es-data")
     public ServiceResponse deleteAllHousePricesEsData() throws GenericException {
         housePricesESService.deleteAll();
+        return  new ServiceResponse(null, true);
+    }
+
+    @DeleteMapping("/hp-pg-data")
+    public ServiceResponse deleteAllHousePricesData() throws GenericException {
+        housePricesService.deleteAllHousePricesData();
         return  new ServiceResponse(null, true);
     }
 }
