@@ -26,8 +26,8 @@ public class HousePrices {
     @JoinColumn(name = "bed_type_id")
     private BedType bedType;
 
-    private Integer bedrooms;
-    private Integer beds;
+    private Double bedrooms;
+    private Double beds;
 
     @ManyToOne
     @JoinColumn(name = "cancellation_policy_id")
@@ -80,7 +80,7 @@ public class HousePrices {
     private PropertyType propertyType;
 
     @Column(name = "review_scores_rating")
-    private Integer reviewScoresRating;
+    private Double reviewScoresRating;
 
     @ManyToOne
     @JoinColumn(name = "room_type_id")
@@ -94,5 +94,5 @@ public class HousePrices {
     private Zipcode zipcode;
 
     @Column(name = "y_number_of_persons_want")
-    private Integer yNumberOfPersonsWant;
+    private Double yNumberOfPersonsWant;
 }

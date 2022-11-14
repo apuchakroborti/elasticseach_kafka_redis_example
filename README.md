@@ -24,7 +24,19 @@ https://www.elastic.co/downloads/past-releases/elasticsearch-7-13-1
 Go to the bin folder, for windows, execute elasticsearch.bat
 The node will be started, and the node details will be shown as host:port, for example 127.0.0.1:9200
 
-To get the node info:
+#Download and run kafka
+https://kafka.apache.org/downloads
+Version: 2.12-3.3.1.tgz
+Extract and do copy all files into short path directory like D:\kafka 
+
+Start the zookeeper first: \
+$ .\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+Then start the kafka server: \
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+
+To get the elasticsearch node info:
 Hit the url: http://127.0.0.1:9200/
 
 To get all of the info about indices:
@@ -45,8 +57,14 @@ Insert data API:
 POST http://127.0.0.1:8080/service-api/api/house-prices \
 BODY: filePath
 
+Insert data through multi-threading based API:
+POST http://127.0.0.1:8080/service-api/api/house-prices/save-by-multi-threading \
+POST http://127.0.0.1:8080/service-api/api/house-prices \
+BODY: filePath
+
 Get data from pg API: GET http://127.0.0.1:8080/service-api/api/house-prices/search \
-Get data from ES API: GET http://127.0.0.1:8080/service-api/api/house-prices/adv-search
+Get data from ES API: GET http://127.0.0.1:8080/service-api/api/house-prices/adv-search \
+Get data from ES through multi-threading based API: http://127.0.0.1:8080/service-api/api/house-prices/get-all-by-multi-threading 
 
 
 Note: here I have used he HousePrices Dataset from kaggle.
