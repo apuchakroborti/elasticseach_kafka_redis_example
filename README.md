@@ -36,6 +36,11 @@ Then start the kafka server: \
 .\bin\windows\kafka-server-start.bat .\config\server.properties
 
 
+#Download and start redis server
+Url: https://github.com/microsoftarchive/redis/releases/tag/win-3.2.100
+Download the Redis-x64-3.2.100.zip file
+Run the redis-server.exe file
+
 To get the elasticsearch node info:
 Hit the url: http://127.0.0.1:9200/
 
