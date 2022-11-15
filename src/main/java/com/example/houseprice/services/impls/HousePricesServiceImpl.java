@@ -293,6 +293,12 @@ public class HousePricesServiceImpl implements HousePricesService {
         housePricesRepository.deleteAll();
         return true;
     }
+    @Override
+    public HousePrices findById(Long id) throws GenericException{
+        Optional<HousePrices> optionalHousePrices = housePricesRepository.findById(id);
+        if(optionalHousePrices.isPresent())return optionalHousePrices.get();
+        return null;
+    }
     private HousePrices getModel(HousePricesCSVReadingDto csvRecord) throws GenericException{
         HousePrices housePrices = new HousePrices();
 

@@ -19,4 +19,5 @@ public interface HousePricesService {
     ResponseEntity<ServiceResponse> insertHousePricesFromKDFilePath(String filePath) throws GenericException;
     Page<HousePrices> getHousePricesList(HouseSearchCriteria criteria, Pageable pageable) throws GenericException;
     Boolean deleteAllHousePricesData() throws GenericException;
+    HousePrices findById(Long id) throws GenericException;
 }
