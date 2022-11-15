@@ -2,7 +2,7 @@ package com.example.houseprice.controllers;
 
 import com.example.houseprice.dto.response.ServiceResponse;
 import com.example.houseprice.exceptions.GenericException;
-import com.example.houseprice.models.HousePrices;
+import com.example.houseprice.entity.HousePrices;
 import com.example.houseprice.redis.HousePricesDao;
 import com.example.houseprice.redis.entity.HousePricesRedisInfo;
 import com.example.houseprice.services.HousePricesService;

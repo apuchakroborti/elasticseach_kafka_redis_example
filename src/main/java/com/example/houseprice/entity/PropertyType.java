@@ -1,4 +1,4 @@
-package com.example.houseprice.models;
+package com.example.houseprice.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,19 +8,18 @@ import lombok.Setter;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "LOOKUP_ZIPCODE")
+@Table(name = "LOOKUP_PROPERTY_TYPE")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Zipcode {
+public class PropertyType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(name = "code", unique = true)
-    private String code;
-
-    public Zipcode(String code){
-        this.code = code;
+    private Integer id;
+    @Column(name = "name", unique = true)
+    private String name;
+    public PropertyType(String name){
+        this.name = name;
     }
 }

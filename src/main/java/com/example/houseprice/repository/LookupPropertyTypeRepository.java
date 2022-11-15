@@ -1,6 +1,6 @@
 package com.example.houseprice.repository;
 
-import com.example.houseprice.models.PropertyType;
+import com.example.houseprice.entity.PropertyType;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

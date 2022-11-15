@@ -6,12 +6,11 @@ import com.example.houseprice.dto.response.ServiceResponse;
 import com.example.houseprice.es.document.HousePricesEsInfo;
 import com.example.houseprice.es.service.HousePricesESService;
 import com.example.houseprice.exceptions.GenericException;
-import com.example.houseprice.models.*;
+import com.example.houseprice.entity.*;
 import com.example.houseprice.repository.*;
 import com.example.houseprice.services.HousePricesService;
 import com.example.houseprice.specifications.HousePricesSearchSpecifications;
 import com.example.houseprice.utils.CSVHelper;
-import com.example.houseprice.utils.Defs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -229,42 +228,40 @@ public class HousePricesServiceImpl implements HousePricesService {
     }
 
     @Override
-    public ResponseEntity<ServiceResponse> insertHousePricesFromKaggleDataset(MultipartFile file) throws GenericException {
+    public String insertHousePricesFromKaggleDataset(MultipartFile file) throws GenericException {
         String message = "";
         if (CSVHelper.hasCSVFormat(file)) {
             try {
                 this.save(file);
-
                 message = "Uploaded the file successfully: " + file.getOriginalFilename();
-                return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(null, message));
+                return message;
             } catch (Exception e) {
                 message = "Could not upload the file: " + file.getOriginalFilename() + "!";
-                return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new ServiceResponse(null, message));
+                return message;
             }
         }
 
         message = "Please upload a csv file!";
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ServiceResponse(null, message));
+        return message;
     }
     @Override
-    public ResponseEntity<ServiceResponse> insertHousePricesFromKDFilePath(String filePath) throws GenericException {
+    public String insertHousePricesFromKDFilePath(String filePath) throws GenericException {
         String message = "";
         if(!StringUtils.isEmpty(filePath)){
             try {
                 this.saveFromFilePath(filePath);
 
                 message = "Uploaded the file successfully: " + filePath;
-                return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(null, message));
+                return message;
             } catch (Exception e) {
                 logger.error("Error occurred while uploading file!, message: "+e.getMessage());
                 e.printStackTrace();
                 message = "Could not upload the file: " + filePath + "!";
-                return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new ServiceResponse(null, message));
+                throw new GenericException(message);
             }
         }
-
         message = "Please upload a csv file!";
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ServiceResponse(null, message));
+        throw new GenericException(message);
     }
 
     @Override

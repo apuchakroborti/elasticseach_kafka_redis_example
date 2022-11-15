@@ -1,8 +1,6 @@
 package com.example.houseprice.repository;
 
-import com.example.houseprice.models.BedType;
-import com.example.houseprice.models.CancellationType;
-import com.example.houseprice.models.Zipcode;
+import com.example.houseprice.entity.CancellationType;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

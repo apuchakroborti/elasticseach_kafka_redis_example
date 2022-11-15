@@ -57,7 +57,7 @@ public class PostgreConfig {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(@Qualifier("primaryDataSource") DataSource dataSource) {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource);
-        em.setPackagesToScan("com.example.houseprice.models");
+        em.setPackagesToScan("com.example.houseprice.entity");
         em.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         HashMap<String, Object> properties = new HashMap<>();
         properties.put("hibernate.dialect", hibernateDialect);

@@ -1,12 +1,8 @@
 package com.example.houseprice.redis.entity;
 
-import com.example.houseprice.models.HousePrices;
+import com.example.houseprice.entity.HousePrices;
 import com.example.houseprice.utils.Utils;
 import lombok.*;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.redis.core.RedisHash;
 
 import javax.persistence.Id;

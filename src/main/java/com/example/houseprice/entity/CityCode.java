@@ -1,4 +1,4 @@
-package com.example.houseprice.models;
+package com.example.houseprice.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,19 +8,19 @@ import lombok.Setter;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "LOOKUP_NEIGHBOURHOOD_CITY")
+@Table(name = "LOOKUP_CITY_CODE")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class NeighbourhoodCity {
+public class CityCode {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(name = "name", unique = true)
-    private String name;
+    private Integer id;
+    @Column(name = "code", unique = true)
+    private String code;
 
-    public NeighbourhoodCity(String name){
-        this.name = name;
+    public CityCode(String code){
+        this.code = code;
     }
 }

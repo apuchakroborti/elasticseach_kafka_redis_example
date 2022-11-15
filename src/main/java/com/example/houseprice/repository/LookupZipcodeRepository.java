@@ -1,6 +1,6 @@
 package com.example.houseprice.repository;
 
-import com.example.houseprice.models.Zipcode;
+import com.example.houseprice.entity.Zipcode;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

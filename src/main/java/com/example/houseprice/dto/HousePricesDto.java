@@ -1,6 +1,6 @@
 package com.example.houseprice.dto;
 
-import com.example.houseprice.models.*;
+import com.example.houseprice.entity.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

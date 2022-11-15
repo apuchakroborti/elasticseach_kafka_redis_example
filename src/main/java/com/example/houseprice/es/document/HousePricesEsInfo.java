@@ -1,6 +1,6 @@
 package com.example.houseprice.es.document;
 
-import com.example.houseprice.models.*;
+import com.example.houseprice.entity.*;
 import com.example.houseprice.utils.Utils;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

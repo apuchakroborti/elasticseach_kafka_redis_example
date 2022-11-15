@@ -1,4 +1,4 @@
-package com.example.houseprice.models;
+package com.example.houseprice.entity;
 
 import lombok.*;
 

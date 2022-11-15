@@ -1,5 +1,6 @@
 package com.example.houseprice.controllers;
 
+import com.example.houseprice.dto.APIResponse;
 import com.example.houseprice.dto.request.HouseSearchCriteria;
 import com.example.houseprice.dto.response.Pagination;
 import com.example.houseprice.dto.response.ServiceResponse;
@@ -7,9 +8,11 @@ import com.example.houseprice.es.document.HousePricesEsInfo;
 import com.example.houseprice.es.service.HousePricesESService;
 import com.example.houseprice.exceptions.GenericException;
 import com.example.houseprice.dto.HousePricesDto;
-import com.example.houseprice.models.HousePrices;
+import com.example.houseprice.entity.HousePrices;
 import com.example.houseprice.services.HousePricesService;
 import com.example.houseprice.utils.Utils;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,27 +28,46 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/house-prices")
+@AllArgsConstructor
+@Slf4j
 public class HousePricesController {
 
+    //if we use the annotation @AllArgsConstructor no need to autowired
     private final HousePricesService housePricesService;
     private final HousePricesESService housePricesESService;
 
-    @Autowired
-    HousePricesController(HousePricesService housePricesService,
-                          HousePricesESService housePricesESService){
-        this.housePricesService = housePricesService;
-        this.housePricesESService = housePricesESService;
-    }
-
     @PostMapping("/multipart-file")
-    public ResponseEntity<ServiceResponse> uploadMultiPartFile(@RequestParam("file") MultipartFile file) throws GenericException {
-        return housePricesService.insertHousePricesFromKaggleDataset(file);
+    public ResponseEntity<APIResponse> uploadMultiPartFile(@RequestParam("file") MultipartFile file) throws GenericException {
+        log.info(HousePricesController.class.getName()+"::uploadMultiPartFile start");
+
+        String message = housePricesService.insertHousePricesFromKaggleDataset(file);
+        log.debug(HousePricesController.class.getName()+"::uploadMultiPartFile message: {}", message);
+
+        APIResponse<String> responseDTO = APIResponse
+                .<String>builder()
+                .status("SUCCESS")
+                .results(message)
+                .build();
+
+        log.info(HousePricesController.class.getName()+"::uploadMultiPartFile finish");
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 
     @PostMapping
-    public ResponseEntity<ServiceResponse> fromFilePathAndSaveHousePricesData(@RequestBody String filePath) throws GenericException {
-        return housePricesService.insertHousePricesFromKDFilePath(filePath);
+    public ResponseEntity<APIResponse> fromFilePathAndSaveHousePricesData(@RequestBody String filePath) throws GenericException {
+        log.info(HousePricesController.class.getName()+"::fromFilePathAndSaveHousePricesData start");
 
+        String message = housePricesService.insertHousePricesFromKDFilePath(filePath);
+        log.debug(HousePricesController.class.getName()+"::fromFilePathAndSaveHousePricesData message: {}", message);
+
+        APIResponse<String> responseDTO = APIResponse
+                .<String>builder()
+                .status("SUCCESS")
+                .results(message)
+                .build();
+
+        log.info(HousePricesController.class.getName()+"::fromFilePathAndSaveHousePricesData finish");
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
     @PostMapping("/save-by-multi-threading")
     public ResponseEntity<ServiceResponse> fromFilePathAndSaveHousePricesDataAsync(@RequestBody String filePath) throws GenericException {

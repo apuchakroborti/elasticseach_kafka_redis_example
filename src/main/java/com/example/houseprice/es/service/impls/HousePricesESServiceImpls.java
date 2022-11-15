@@ -5,11 +5,11 @@ import com.example.houseprice.es.document.HousePricesEsInfo;
 import com.example.houseprice.es.enums.EsSearchQueryType;
 import com.example.houseprice.es.repository.HousePricesEsRepository;
 import com.example.houseprice.es.service.HousePricesESService;
-import com.example.houseprice.services.impls.HousePricesServiceImpl;
 import com.example.houseprice.utils.Utils;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,31 +21,28 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 
 @Service
+@AllArgsConstructor
+@Slf4j
 public class HousePricesESServiceImpls implements HousePricesESService {
 
-    Logger logger = LoggerFactory.getLogger(HousePricesESServiceImpls.class);
+//    Logger log = LoggerFactory.getLogger(HousePricesESServiceImpls.class);
 
     private final HousePricesEsRepository housePricesEsRepository;
-
-
     private final ElasticsearchOperations elasticsearchTemplate;
 
-    @Autowired
+    /*@Autowired
     public HousePricesESServiceImpls(HousePricesEsRepository housePricesEsRepository,
                                      ElasticsearchOperations elasticsearchTemplate){
         this.housePricesEsRepository = housePricesEsRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
-    }
+    }*/
 
     @Override
     public void save(final HousePricesEsInfo housePricesEsInfo){
@@ -56,9 +53,9 @@ public class HousePricesESServiceImpls implements HousePricesESService {
     public void saveAll(List<HousePricesEsInfo> housePricesEsInfo){
         try {
             housePricesEsRepository.saveAll(housePricesEsInfo);
-            logger.info("Saving data into completed, size: {}", housePricesEsInfo.size());
+            log.info("Saving data into completed, size: {}", housePricesEsInfo.size());
         }catch (Exception e){
-            logger.error("Error occurred while saving data into es, message: {}", e.getMessage());
+            log.error("Error occurred while saving data into es, message: {}", e.getMessage());
             e.printStackTrace();
         }
     }

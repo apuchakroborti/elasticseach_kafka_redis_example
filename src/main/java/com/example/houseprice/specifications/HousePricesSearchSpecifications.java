@@ -1,6 +1,6 @@
 package com.example.houseprice.specifications;
 
-import com.example.houseprice.models.HousePrices;
+import com.example.houseprice.entity.HousePrices;
 import com.example.houseprice.utils.Utils;
 import org.springframework.data.jpa.domain.Specification;
 
