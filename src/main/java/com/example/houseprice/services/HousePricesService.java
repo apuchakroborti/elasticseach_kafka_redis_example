@@ -22,4 +22,5 @@ public interface HousePricesService {
     HousePrices findById(Long id) throws GenericException;
 
     HousePricesDto createNewHousePrice(HousePricesDto housePricesDto) throws GenericException;
+    List<HousePricesDto> findAll() throws GenericException;
 }

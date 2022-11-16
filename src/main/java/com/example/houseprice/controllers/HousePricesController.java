@@ -122,12 +122,19 @@ public class HousePricesController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<APIResponse> searchHouse(HouseSearchCriteria criteria, @PageableDefault(value = 10) Pageable pageable) throws GenericException {
-        Page<HousePrices>  housePricesPage = housePricesService.getHousePricesList(criteria, pageable);
+    public ResponseEntity<APIResponse> searchHousePrices(HouseSearchCriteria criteria, @PageableDefault(value = 10) Pageable pageable) throws GenericException {
+        log.info(HousePricesController.class.getName()+"::searchHousePrices search criteria {}", Utils.jsonAsString(criteria));
 
-        ServiceResponse serviceResponse =  new ServiceResponse(Utils.getSuccessResponse(),
-                Utils.toDtoList(housePricesPage.getContent(), HousePricesDto.class),
-                new Pagination(housePricesPage.getTotalElements(), housePricesPage.getNumberOfElements(), housePricesPage.getNumber(), housePricesPage.getSize()));
+        Page<HousePrices>  housePricesPage = housePricesService.getHousePricesList(criteria, pageable);
+        log.debug(HousePricesController.class.getName()+"::searchHousePrices housePricesPage size: {}", housePricesPage!=null?housePricesPage.getTotalElements():0);
+
+        ServiceResponse serviceResponse = null;
+        if(housePricesPage!=null && housePricesPage.getTotalElements()>0){
+            serviceResponse =  new ServiceResponse(Utils.getSuccessResponse(),
+                    Utils.toDtoList(housePricesPage.getContent(), HousePricesDto.class),
+                    new Pagination(housePricesPage.getTotalElements(), housePricesPage.getNumberOfElements(), housePricesPage.getNumber(), housePricesPage.getSize()));
+        }
+        log.debug(HousePricesController.class.getName()+"::searchHousePrices housePricesPage data: {}", serviceResponse!=null?serviceResponse.getData().toString():null);
 
         APIResponse<ServiceResponse> responseDTO = APIResponse
                 .<ServiceResponse>builder()
@@ -135,8 +142,10 @@ public class HousePricesController {
                 .results(serviceResponse)
                 .build();
 
+        log.info(HousePricesController.class.getName()+"::searchHousePrices end {}", Utils.jsonAsString(responseDTO));
         return  new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
+
     @GetMapping("/adv-search")
     public ResponseEntity<APIResponse> searchAllHousePricesEsData(HouseSearchCriteria criteria, @PageableDefault(value = 10) Pageable pageable) throws GenericException {
         SearchHits<HousePricesEsInfo> searchHits = housePricesESService.advSearchData(criteria, pageable);
@@ -197,5 +206,28 @@ public class HousePricesController {
         log.info(HousePricesController.class.getName()+"::createNewHousePrice response {}", Utils.jsonAsString(responseDTO));
 
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
+    }
+
+    /**
+     * This method will be used to fetch data from postgres db
+     * @Param null
+     * @return all house prices object
+    */
+    @GetMapping("/findAll")
+    public ResponseEntity<APIResponse> findAllHousePrices() throws GenericException {
+        log.info(HousePricesController.class.getName()+"::findAllHousePrices start");
+
+        List<HousePricesDto> housePricesResponseDto = housePricesService.findAll();
+        log.debug(HousePricesController.class.getName()+"::findAllHousePrices data: {}", housePricesResponseDto);
+
+        //Builder Design pattern (to avoid complex object creation headache)
+        APIResponse<List<HousePricesDto>> responseDTO = APIResponse
+                .<List<HousePricesDto>>builder()
+                .status("SUCCESS")
+                .results(housePricesResponseDto)
+                .build();
+
+        log.info(HousePricesController.class.getName()+"::findAllHousePrices  response {}", responseDTO.toString());
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 }

@@ -27,7 +27,7 @@
         <!-- LOG everything at INFO level -->
         <Root level="info">
             <AppenderRef ref="Console" />
-            <AppenderRef ref="RollingFile" />
+<!--            <AppenderRef ref="RollingFile" />-->
         </Root>
 
         <!-- LOG "com.baeldung*" at TRACE level -->

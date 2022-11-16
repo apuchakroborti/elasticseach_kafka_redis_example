@@ -56,11 +56,12 @@ class HousePricesApplicationTests {
 	public void createNewHousePricesTest() throws Exception {
 
 		HousePrices housePrices = new HousePrices(1L, "TV", 1, 1.0, null, 1.0, 2.0, null,
-				null, 1, "test description", LocalDate.of(2022, 11, 30),1,
+				null, 1, "test description", null,1,
 				null, null, null, null, null, null, null, null, null, null,
 				null, null, null, null, null, null);
 
 		when(housePricesRepository.save(any())).thenReturn(housePrices);
+
 		mockMvc.perform(MockMvcRequestBuilders
 				.post(ENDPOINT_URL+"/create")
 				.content(Objects.requireNonNull(Utils.jsonAsString(housePrices)))
@@ -74,22 +75,22 @@ class HousePricesApplicationTests {
 	public void shouldReturnAllProductsFromDB() throws Exception {
 		when(housePricesRepository.findAll()).thenReturn(Arrays.asList(
 				new HousePrices(1L, "TV", 1, 1.0, null, 1.0, 2.0, null,
-						null, 1, "test description", LocalDate.of(2022, 11, 30),1,
+						null, 1, "test description", null,1,
 						 null, null, null, null, null, null, null, null, null, null,
 						null, null, null, null, null, null),
 
-				new HousePrices(1L, "TV2", 1, 1.0, null, 1.0, 2.0, null,
-						null, 1, "test description2", LocalDate.of(2022, 11, 15),1,
+				new HousePrices(2L, "TV2", 1, 1.0, null, 1.0, 2.0, null,
+						null, 1, "test description2", null,1,
 						null, null, null, null, null, null, null, null, null, null,
 						null, null, null, null, null, null)
 		));
 		mockMvc.perform(MockMvcRequestBuilders
-				.get(ENDPOINT_URL+"/search")
+				.get(ENDPOINT_URL+"/findAll")
 				.accept(MediaType.APPLICATION_JSON))
 				.andDo(print())
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.jsonPath("$.*").exists())
-				.andExpect(MockMvcResultMatchers.jsonPath("$.results[0].id").value(1));
+				.andExpect(MockMvcResultMatchers.jsonPath("$.results[0].id").value(1L));
 	}
 
 

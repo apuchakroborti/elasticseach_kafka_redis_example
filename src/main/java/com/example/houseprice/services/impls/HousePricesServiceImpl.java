@@ -31,11 +31,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
 import org.springframework.kafka.core.KafkaTemplate;
 
 
@@ -461,21 +460,47 @@ public class HousePricesServiceImpl implements HousePricesService {
 
     @Override
     public HousePricesDto createNewHousePrice(HousePricesDto housePricesDto) throws GenericException{
-        log.info(this.getClass().getName()+"::"+this.getClass().getEnclosingMethod().getName()+" start");
+        log.info("HousePricesServiceImpl::createNewHousePrice start");
         try{
             HousePrices housePrices = new HousePrices();
             Utils.copyProperty(housePricesDto, housePrices);
             housePrices = housePricesRepository.save(housePrices);
-            log.debug(this.getClass().getName()+"::"+this.getClass().getEnclosingMethod().getName()+" housePrices: {}", housePrices.toString());
+            log.debug("HousePricesServiceImpl::createNewHousePrice housePrices: {}", housePrices.toString());
 
             Utils.copyProperty(housePrices, housePricesDto);
 
-            log.info(this.getClass().getName()+"::"+this.getClass().getEnclosingMethod().getName()+" start");
+            log.info("HousePricesServiceImpl::createNewHousePrice end");
             return housePricesDto;
         }catch (Exception e){
-            log.error(this.getClass().getName()+"::"+this.getClass().getEnclosingMethod().getName()+" exception occurred while creating new prices!");
+            log.error("HousePricesServiceImpl::createNewHousePrice exception occurred while creating new prices!");
             e.printStackTrace();
-            throw new GenericException(this.getClass().getName()+"::"+this.getClass().getEnclosingMethod().getName()+" exception occurred while creating new prices!");
+            throw new GenericException("Exception occurred while creating new prices!");
+        }
+    }
+    @Override
+    public List<HousePricesDto> findAll() throws GenericException{
+        log.info("HousePricesServiceImpl::findAll() start");
+        try{
+            List<HousePricesDto> housePricesDtoList = new ArrayList<>();
+
+            List<HousePrices> housePricesList = housePricesRepository.findAll();
+            if(housePricesList!=null && housePricesList.size()>0){
+                log.debug("HousePricesServiceImpl::findAll() data: {}", housePricesList.toString());
+                for(HousePrices housePrices: housePricesList){
+                    HousePricesDto housePricesDto = new HousePricesDto();
+                    Utils.copyProperty(housePrices, housePricesDto);
+                    housePricesDtoList.add(housePricesDto);
+                }
+            }else{
+                housePricesDtoList = Collections.emptyList();
+                log.debug("HousePricesServiceImpl::findAll() data: {}", housePricesList.toString());
+            }
+            log.info("HousePricesServiceImpl::findAll() end");
+            return housePricesDtoList;
+        }catch (Exception e){
+            log.error("HousePricesServiceImpl::findAll() exception occurred while creating new prices!");
+            e.printStackTrace();
+            throw new GenericException("Exception occurred while creating new prices!");
         }
     }
 }
