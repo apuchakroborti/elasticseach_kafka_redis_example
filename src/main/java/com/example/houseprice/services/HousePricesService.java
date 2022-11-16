@@ -1,14 +1,14 @@
 package com.example.houseprice.services;
 
+import com.example.houseprice.dto.HousePricesDto;
 import com.example.houseprice.dto.request.HouseSearchCriteria;
-import com.example.houseprice.dto.response.ServiceResponse;
 import com.example.houseprice.exceptions.GenericException;
 import com.example.houseprice.entity.HousePrices;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface HousePricesService {
@@ -20,4 +20,6 @@ public interface HousePricesService {
     Page<HousePrices> getHousePricesList(HouseSearchCriteria criteria, Pageable pageable) throws GenericException;
     Boolean deleteAllHousePricesData() throws GenericException;
     HousePrices findById(Long id) throws GenericException;
+
+    HousePricesDto createNewHousePrice(HousePricesDto housePricesDto) throws GenericException;
 }

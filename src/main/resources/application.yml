@@ -1,0 +1,42 @@
+server:
+  servlet:
+    contextPath: /service-api
+  port: 8080
+spring:
+  application:
+    name: service-api
+  #Spring datasource properties
+  datasource:
+    url: jdbc:postgresql://localhost:5432/houseprices
+    username: apu
+    password: tigerit
+  postgres:
+    persistence:
+      unit: postgresql
+  #JPA configuration
+  jpa:
+    database-platform: postgres
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+    #DATASOURCE HIBERNATE PROPERTIES
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        order_inserts: true
+        generate_statistics: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+          batch_size: 15
+
+#for kafka
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+#for elasticsearch
+elasticsearch:
+  url: localhost:9200

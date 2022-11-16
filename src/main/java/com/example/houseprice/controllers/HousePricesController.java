@@ -23,7 +23,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 
 @RestController
@@ -41,8 +45,10 @@ public class HousePricesController {
         log.info(HousePricesController.class.getName()+"::uploadMultiPartFile start");
 
         String message = housePricesService.insertHousePricesFromKaggleDataset(file);
+        //{}, variable should be used for memory optimization also
         log.debug(HousePricesController.class.getName()+"::uploadMultiPartFile message: {}", message);
 
+        //Builder design pattern
         APIResponse<String> responseDTO = APIResponse
                 .<String>builder()
                 .status("SUCCESS")
@@ -70,48 +76,126 @@ public class HousePricesController {
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
     @PostMapping("/save-by-multi-threading")
-    public ResponseEntity<ServiceResponse> fromFilePathAndSaveHousePricesDataAsync(@RequestBody String filePath) throws GenericException {
-        housePricesService.saveHousePricesDataAsync(filePath);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<APIResponse> fromFilePathAndSaveHousePricesDataAsync(@RequestBody String filePath) throws GenericException {
+        log.info(HousePricesController.class.getName()+"::fromFilePathAndSaveHousePricesDataAsync start");
+
+        CompletableFuture<Iterable<HousePrices>> test = housePricesService.saveHousePricesDataAsync(filePath);
+
+        APIResponse< CompletableFuture<Iterable<HousePrices>>> responseDTO = APIResponse
+                .<CompletableFuture<Iterable<HousePrices>>>builder()
+                .status("SUCCESS")
+                .results(test)
+                .build();
+
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
+
     @GetMapping(value = "/get-all-by-multi-threading", produces = "application/json")
-    public CompletableFuture<ResponseEntity> getAllHousePricesDataAsync() throws GenericException {
-        return housePricesService.findAllHousePricesDataAsync().thenApply(ResponseEntity::ok);
+    public ResponseEntity<APIResponse> getAllHousePricesDataAsync() throws GenericException {
+        try{
+            CompletableFuture<Iterable<HousePrices>> test = housePricesService.findAllHousePricesDataAsync();
+            APIResponse<ServiceResponse<Iterable<HousePrices>>> responseDTO = APIResponse
+                    .<ServiceResponse<Iterable<HousePrices>>>builder()
+                    .status("SUCCESS")
+                    .results(new ServiceResponse<>(null, test.get()))
+                    .build();
+            return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+
+        }catch (Exception e){
+         throw new GenericException("Exception occurred while asynchronous data fetching!");
+        }
     }
+
     @GetMapping(value = "/get-all-by-multi-threading-join", produces = "application/json")
-    public  ResponseEntity getAllHousePricesDataAsyncJoin() throws GenericException{
+    public  ResponseEntity<APIResponse> getAllHousePricesDataAsyncJoin() throws GenericException{
         CompletableFuture<Iterable<HousePrices>> hp1 = housePricesService.findAllHousePricesDataAsync();
         CompletableFuture<Iterable<HousePrices>> hp2 = housePricesService.findAllHousePricesDataAsync();
         CompletableFuture<Iterable<HousePrices>> hp3 = housePricesService.findAllHousePricesDataAsync();
         CompletableFuture.allOf(hp1,hp2,hp3).join();
-        return  ResponseEntity.status(HttpStatus.OK).build();
+
+        APIResponse<String> responseDTO = APIResponse
+                .<String>builder()
+                .status("SUCCESS")
+                .results("Search done")
+                .build();
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
     @GetMapping("/search")
-    public ServiceResponse<Page<HousePricesDto>> searchHouse(HouseSearchCriteria criteria, @PageableDefault(value = 10) Pageable pageable) throws GenericException {
+    public ResponseEntity<APIResponse> searchHouse(HouseSearchCriteria criteria, @PageableDefault(value = 10) Pageable pageable) throws GenericException {
         Page<HousePrices>  housePricesPage = housePricesService.getHousePricesList(criteria, pageable);
 
-        return new ServiceResponse(Utils.getSuccessResponse(),
+        ServiceResponse serviceResponse =  new ServiceResponse(Utils.getSuccessResponse(),
                 Utils.toDtoList(housePricesPage.getContent(), HousePricesDto.class),
                 new Pagination(housePricesPage.getTotalElements(), housePricesPage.getNumberOfElements(), housePricesPage.getNumber(), housePricesPage.getSize()));
+
+        APIResponse<ServiceResponse> responseDTO = APIResponse
+                .<ServiceResponse>builder()
+                .status("SUCCESS")
+                .results(serviceResponse)
+                .build();
+
+        return  new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
     @GetMapping("/adv-search")
-    public ServiceResponse searchAllHousePricesEsData(HouseSearchCriteria criteria, @PageableDefault(value = 10) Pageable pageable) throws GenericException {
+    public ResponseEntity<APIResponse> searchAllHousePricesEsData(HouseSearchCriteria criteria, @PageableDefault(value = 10) Pageable pageable) throws GenericException {
         SearchHits<HousePricesEsInfo> searchHits = housePricesESService.advSearchData(criteria, pageable);
 
-        return new ServiceResponse(Utils.getSuccessResponse(),
+        ServiceResponse serviceResponse = new ServiceResponse(Utils.getSuccessResponse(),
                 searchHits.getSearchHits(),
                 new Pagination(searchHits.getTotalHits(), searchHits.getSearchHits().size(), pageable.getPageNumber(), pageable.getPageSize()));
+
+        APIResponse<ServiceResponse> responseDTO = APIResponse
+                .<ServiceResponse>builder()
+                .status("SUCCESS")
+                .results(serviceResponse)
+                .build();
+
+        return  new ResponseEntity<>(responseDTO, HttpStatus.OK);
+
     }
     @DeleteMapping("/es-data")
-    public ServiceResponse deleteAllHousePricesEsData() throws GenericException {
+    public ResponseEntity<APIResponse> deleteAllHousePricesEsData() throws GenericException {
         housePricesESService.deleteAll();
-        return  new ServiceResponse(null, true);
+
+        APIResponse<String> responseDTO = APIResponse
+                .<String>builder()
+                .status("SUCCESS")
+                .results("Deleted all data from elasticsearch")
+                .build();
+
+        return  new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
     @DeleteMapping("/hp-pg-data")
-    public ServiceResponse deleteAllHousePricesData() throws GenericException {
-        housePricesService.deleteAllHousePricesData();
-        return  new ServiceResponse(null, true);
+    public ResponseEntity<APIResponse> deleteAllHousePricesData() throws GenericException {
+        Boolean message = housePricesService.deleteAllHousePricesData();
+
+        APIResponse<Boolean> responseDTO = APIResponse
+                .<Boolean>builder()
+                .status("SUCCESS")
+                .results(message)
+                .build();
+
+        return  new ResponseEntity<>(responseDTO, HttpStatus.OK);
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<APIResponse> createNewHousePrice(@RequestBody @Valid HousePricesDto housePricesDto) throws GenericException{
+        log.info(HousePricesController.class.getName()+"::createNewHousePrice request body {}", Utils.jsonAsString(housePricesDto));
+
+        HousePricesDto housePricesResponseDTO = housePricesService.createNewHousePrice(housePricesDto);
+        log.debug(HousePricesController.class.getName()+"::createNewHousePrice request body {}", Utils.jsonAsString(housePricesDto));
+
+        //Builder Design pattern
+        APIResponse<HousePricesDto> responseDTO = APIResponse
+                .<HousePricesDto>builder()
+                .status("SUCCESS")
+                .results(housePricesResponseDTO)
+                .build();
+
+        log.info(HousePricesController.class.getName()+"::createNewHousePrice response {}", Utils.jsonAsString(responseDTO));
+
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 }
