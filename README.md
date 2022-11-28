@@ -89,3 +89,10 @@ to \
 host    all             all             127.0.0.1/32            trust
 
 Then restart the system
+
+#Spring Batch Processing
+for testing spring batch processing need to create all the tables related to it you can create it through flyway by defining schemas by yourselves
+or setting ddl-auto: update
+
+Spring Job creates transaction manager itself: collision between PostgressConfig and built in Simple Spring Job transactionManager needed to resolved it
+

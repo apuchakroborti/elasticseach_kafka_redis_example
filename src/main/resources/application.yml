@@ -29,8 +29,13 @@ spring:
           lob:
             non_contextual_creation: true
           batch_size: 15
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
 
-#for kafka
+  #for kafka
   kafka:
     producer:
       bootstrap-servers: localhost:9092

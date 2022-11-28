@@ -9,8 +9,9 @@ import java.time.LocalDate;
 @Table(name = "HOUSE_PRICES")
 @Getter
 @Setter
-@NoArgsConstructor
+//@NoArgsConstructor
 @AllArgsConstructor
+@RequiredArgsConstructor
 @ToString
 public class HousePrices {
     @Id
